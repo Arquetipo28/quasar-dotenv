@@ -21,14 +21,14 @@ const evaluateProperty = (object, property, stringify) => {
 }
 
 module.exports = {
-  config: function (options = {}) {
+  config: function (options = {}, quasarBeta = true) {
     const configOptions = { ...defaultOptions, ...options }
     const parsedEnv = config(configOptions).parsed || {}
-    const quasarEnv = evaluateObject(parsedEnv)
+    const quasarEnv = evaluateObject(parsedEnv, quasarBeta)
     const encoding = configOptions.encoding
     const baseEnvPath = path.resolve(configOptions.examplePath, '.env.example')
     const baseEnvBuffer = fs.readFileSync(baseEnvPath, { encoding })
-    const baseEnv = evaluateObject(parse(baseEnvBuffer))
+    const baseEnv = evaluateObject(parse(baseEnvBuffer), quasarBeta)
 
     return { ...baseEnv, ...quasarEnv }
   }
