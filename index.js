@@ -1,32 +1,35 @@
+const fs = require('fs')
+const path = require('path')
 const { config, parse } = require('dotenv')
 
 const defaultOptions = {
     encoding: 'utf8',
     examplePath: process.cwd()
 }
+
+const evaluateObject = (object, stringifyValue = true) => {
+  const objectKeys = object.keys || []
+  objectKeys.forEach((key) => Object.assign(object, evaluateProperty(object, key, stringifyValue)))
+
+  return object
+}
+
+const evaluateProperty = (object, property, stringify) => {
+  if (!object.hasOwnProperty(key)) return {}
+
+  return { [key]: stringify ? JSON.stringify(object[key]) : object[key] }
+}
+
 module.exports = {
   config: function (options = {}) {
     const configOptions = { ...defaultOptions, ...options }
-    const parsedEnv = config(configOptions).parsed
-    const quasarEnv = {}
-    for (const key in parsedEnv) {
-      if (parsedEnv.hasOwnProperty(key)) {
-        quasarEnv[key] = JSON.stringify(parsedEnv[key])
-      }
-    }
-
-    const fs = require('fs')
-    const path = require('path')
+    const parsedEnv = config(configOptions).parsed || {}
+    const quasarEnv = evaluateObject(parsedEnv)
     const encoding = configOptions.encoding
     const baseEnvPath = path.resolve(configOptions.examplePath, '.env.example')
     const baseEnvBuffer = fs.readFileSync(baseEnvPath, { encoding })
-    const baseEnv = parse(baseEnvBuffer)
-    for (const key in baseEnv) {
-      if (baseEnv.hasOwnProperty(key)) {
-        quasarEnv[key] = JSON.stringify(process.env[key])
-      }
-    }
+    const baseEnv = evaluateObject(parse(baseEnvBuffer))
 
-    return quasarEnv
+    return { ...baseEnv, ...quasarEnv }
   }
 }
